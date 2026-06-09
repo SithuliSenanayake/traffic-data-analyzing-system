@@ -1,0 +1,324 @@
+Design - Pseudocode
+
+
+START
+	// Task A: Input Validation
+FUNCTION validate_date_input(d_m_y,minValue,maxValue,dateFormat)
+	WHILE TRUE
+		TRY
+			DISPLAY “ Please enter the ” , d_m_y , “ of the survey in the format ” , dateFormat , “ : ”
+			INPUT date
+			IF minValue<= date <=maxValue THEN
+				RETURN date
+			ELSE
+				DISPLAY “ Out of range - values must be in the range of ” , minValue , “ to ” , maxValue
+			ENDIF
+		EXCEPT ValueError
+			DISPLAY “Integer required!!”
+		ENDTRY
+	ENDWHILE
+ENDFUNCTION
+FUNCTION validate_continue_input()
+	WHILE TRUE
+		DISPLAY “Do you want to select another data set for another day? (Y/N) : ”
+		INPUT repeat
+		IF repeat IS “Y” THEN
+			RETURN TRUE
+		ELSE IF repeat IS “N” THEN
+			DISPLAY “End of the program.”
+			RETURN FALSE
+		ELSE
+			DISPLAY “Please enter Y or N”
+		ENDIF
+	ENDWHILE
+ENDFUNCTION
+
+
+// Task B: Processed Outcomes
+FUNCTION process_csv_data(file_name)
+	TRY
+		SET tot_vehicles TO 0
+            	SET tot_trucks TO 0
+            	SET tot_e_vehi TO 0
+            	SET tot_2wheeled_vehi TO 0
+           		SET tot_bus_elm_north TO 0
+            	SET tot_vehi_straight TO 0
+            	SET no_of_bicycles TO 0
+            	SET speedy_vehi TO 0
+            	SET elm_vehi TO 0
+            	SET hanley_vehi TO 0
+            	SET elm_scoot TO 0
+            	SET hour_list TO empty list
+            	SET rainy_hours TO empty list
+            	SET tot_rainy_hours TO 0
+ OPEN file_name FOR READ
+			READ LINE FROM file_name
+ SKIP the first row
+			FOR row IN file_name
+				INCREMENT tot_vehicles BY 1
+				IF row[8] IS "Truck" 
+INCREMENT tot_trucks BY 1
+				ENDIF
+ IF row[9] IS "True" 
+ INCREMENT tot_e_vehi  BY 1
+				ENDIF
+ IF row[8] IS "Bicycle" OR "Scooter" OR "Motorcycle" 
+ INCREMENT tot_2wheeled_vehi BY 1 
+				ENDIF
+ IF row[0] IS "Elm Avenue/Rabbit Road" AND row[4] IS "N" AND row[8] IS "Buss" 
+ INCREMENT tot_bus_elm_north BY 1
+ ENDIF
+ IF row[3] IS row[4] 
+ INCREMENT tot_vehi_straight BY 1
+ ENDIF
+ CALCULATE truck_percent    // (tot_trucks / tot_vehicles) * 100
+ IF row[8] IS "Bicycle" 
+ INCREMENT no_of_bicycles BY 1
+ ENDIF
+ CALCULATE avg_bicycle per hour   // (no_of_bicycles / 24)
+ IF row[6] is lesser than row[7] 
+ INCREMENT speedy_vehi BY 1
+ ENDIF
+ IF row[0] IS "Elm Avenue/Rabbit Road" 
+ INCREMENT elm_vehi BY 1
+ ENDIF
+ IF row[0] IS "Hanley Highway/Westway" 
+ INCREMENT hanley_vehi BY 1
+ ENDIF
+ IF row[0] IS "Elm Avenue/Rabbit Road" AND row[8] IS "Scooter" 
+ INCREMENT elm_scoot BY 1
+				ENDIF
+ CALCULATE scoot_percentage    // (elm_scoot / elm_vehi) * 100
+ IF row[0] IS "Hanley Highway/Westway" 
+ extract hour from row[2] 
+ append hour to hour_list 
+ count occurrences of each hour in hour_list 
+ find the most common hour and its count  
+ SET the most common hour TO peak_hour
+ SET the count of the most common hour TO vehicle_count
+ ENDIF
+ IF "Rain" is in row[5]  
+ extract hour from row[2] 
+ append hour to rainy_hours 
+ remove duplicate hours from rainy_hours by making a new set as r_hour
+ calculate tot_rainy_hours   // by getting the length of the r_hour
+				ENDIF
+			ENDFOR
+			DECLARE outcomes AS a LIST
+			ADD TO outcomes
+				“Data file selected is ” + file_path
+                        		“The total number of vehicles recorded for this date is : ” + tot_vehicles
+                        		“The total number of trucks recorded for this date is : ” + tot_trucks
+                        		“The total number of electric vehicles for this date is : ” + tot_e_vehi
+                        		“The total number of two-wheeled vehicles for this date is : ” + tot_2wheeled_vehi
+                        		“The total number of busses leaving Elm Avenue/Rabbit Road heading north is : ” + tot_bus_elm_north
+                        		“The total number of vehicles passing both junctions without turning left or right is : ” + tot_vehi_straight
+                        		“The percentage of total vehicles recorded that are trucks for this date is : ” + truck_percent
+                        		“The average number of bikes per hour for this date is : ” + avg_bicycle
+                        		“The total number of vehicles recorded as over the speed limit for this date is : ” + speedy_vehi
+                        		“The total number of vehicles recorded through Elm Avenue/Rabbit Road junction is : ” + elm_vehi
+                        		“The total number of vehicles recorded through Hanley Highway/Westway junction is : ” + hanley_vehi
+                        		scoot_percentage + “ % of vehicles recorded through Elm Avenue/Rabbit Road are scooters.”
+                        		“The highest number of vehicles in an hour on Hanley Highway/Westway is : ” + vehicle_count
+                        		“The most vehicles through Hanley Highway/Westway were recorded between ” + peak_hour + “ and ” + (peak_hour+1)
+                       		“The number of hours of rain for this date is : ” + tot_rainy_hours
+ RETURN outcomes	
+ CLOSE file_name
+	EXCEPT FileNotFoundError
+		RETURN an emplty list
+	ENDTRY
+ENDFUNCTION
+
+FUNCTION display_outcomes(file_name)
+	SET outcomes TO process_csv_data(file_name)
+	IF length of outcomes IS 0
+		DISPLAY  file_name , “File Not Found! Please Enter the data again”
+	ELSE
+		FOR item IN outcomes DO
+			DISPLAY item
+		ENDFOR
+	ENDIF
+ENDFUNCTION
+
+
+//Task C: Save Results to Text File
+FUNCTION save_results_to_file(file_name)
+	SET outcomes TO process_csv_data(file_name)
+	OPEN “results.txt” FOR APPEND
+		FOR item IN outcomes DO
+			WRITE item TO “results.txt”
+		ENDFOR
+	CLOSE “results.txt”
+ENDFUNCTION
+
+// Task D : Histogram Display
+CLASS : HistogramApp
+    		ATTRIBUTES:
+traffic_data 
+date
+window
+canvas
+
+METHOD : __init__(traffic_data, date)
+SET self.traffic_data TO traffic_data 
+SET self.date TO date
+SET window TO tkinter.Tk
+INITIALIZE canvas AS none
+	ENDMETHOD
+
+METHOD : setup_window()
+		SET window title TO “Histogram”
+		SET window geometry TO “1200x600”
+		place canvas in window and 
+SET canvas width TO 1200  
+SET canvas height TO 600 
+SET canvas background colour TO white
+	ENDMETHOD
+
+METHOD : draw_histogram():
+    		INITIALIZE margin AS 100
+   		INITIALIZE canvas_width AS 1200
+    		INITIALIZE canvas_height AS 600
+    		INITIALIZE bar_width AS 15
+
+CALCULATE category_spacing AS (canvas_width - 2 * margin) divided by the number of traffic_data categories
+CALCULATE max_height AS canvas_height - 2 * margin
+CALCULATE max_value AS the maximum value across all traffic_data values
+FOR each category (label, values) IN traffic_data
+CALCULATE x_start AS margin + index of the category * category_spacing
+
+CALCULATE bar1_x1 AS x_start
+CALCULATE bar1_x2 AS bar1_x1 + bar_width
+
+CALCULATE bar2_x1 AS bar1_x2
+CALCULATE bar2_x2 AS bar2_x1 + bar_width
+
+CALCULATE bar1_height AS (values[0] / max_value) * max_height
+CALCULATE bar1_y1 AS canvas_height - margin / 2 - bar1_height
+
+CALCULATE bar2_height AS (values[1] / max_value) * max_height
+CALCULATE bar2_y1 AS canvas_height - margin / 2 - bar2_height
+
+CALCULATE y2 AS canvas_height - margin / 2
+
+create a rectangle for bar 1 with dimensions (bar1_x1, bar1_y1, bar1_x2, y2)
+add text above bar 1 to display the value of values[0]
+
+create a rectangle for bar 2 with dimensions (bar2_x1, bar2_y1, bar2_x2, y2)
+add text above bar 2 to display the value of values[1]
+
+add a label below the bars with the category label
+ENDFOR
+
+draw the x-axis from (margin, y2) to (canvas_width - margin - category_spacing, y2)
+
+add a title above the histogram displaying the date
+add a label below the x-axis indicating the time range 
+	
+ENDMETHOD
+
+METHOD : add_legend() 
+		SET margin TO 100
+	
+		SET box1_x1 TO margin
+        		CALCULATE box1_x2 AS box1_x1 + 15
+        		SET box1_y1 TO margin
+        		CALCULATE box1_y2 AS box1_y1 + 15
+        	
+       		SET box2_x1 TO margin
+        		CALCULATE box2_x2 AS box2_x1 + 15
+        		CALCULATE box2_y1 AS box1_y2 + 3
+        		CALCULATE box2_y2 AS box2_y1 +15
+
+create a rectangle for box 1 with dimensions (box1_x1, box1_y1, box1_x2, box1_y2)
+add text after box 1 to display 
+
+create a rectangle for box 2 with dimensions (box2_x1, box2_y1, box2_x2, box2_y2)
+add text after box 2 to display 
+
+	ENDMETHOD
+
+METHOD : run()
+CALL setup_window()
+CALL draw_histogram()
+CALL add_legend()
+START Tkinter main loop
+	ENDMETHOD
+
+// Task E : Handle Multiple CSV Files
+CLASS : MultiCSVProcessor 
+	ATTRIBUTES : 
+		current_data
+
+METHOD : __init__ () 
+INITIALIZE self.current_data AS None 
+	ENDMETHOD
+
+METHOD : load_csv_file(file_path) 
+Create dictionaries to count vehicles for each junction
+SET elm_counted_dict TO empty dictionary {hour:elm_vehicle_count} 
+SET hanley_counted_dict TO empty dictionary {hour:hanley_vehicle_count} 
+SET combined_dict TO empty dictionary {hour:[elm_vehicle_count, hanley_vehicle_count]}
+OPEN file_ path FOR READ
+				READ LINE FROM file_ path
+SKIP the first row
+				FOR row IN file_ path
+					IF row[0] IS “Elm Avenue/Rabbit Road”
+						INCREMENT elm_counted_dict[hour] BY 1
+					ENDIF
+					IF row[0] IS “Hanley Highway/Westway”
+						INCREMENT hanley_counted_dict[hour] BY 1
+					ENDIF
+				ENDFOR
+				FOR EACH (hour,elm_vehicle_count) in elm_counted_dict
+					SET combined_dict[hour] TO [elm_vehicle_count, 0]
+				ENDFOR
+				FOR EACH (hour, hanley_vehicle_count) in hanley_counted_dict
+					SET combined_dict[hour][1] TO hanley_vehicle_count
+				ENDFOR
+			CLOSE file_path
+			RETURN combined_dict
+		ENDMETHOD
+
+METHOD : clear_previous_data() 
+RESET self.current_data TO None 
+OPEN “results.txt” FOR WRITE
+		WRITE “Previous data cleared...” TO “results.txt”
+	CLOSE “results.txt”
+DISPLAY “Previous data cleared”
+	ENDMETHOD
+
+METHOD : handle_user_interaction() 
+RETURN the result of validate_continue_input() 
+	ENDMETHOD
+
+METHOD : process_files() 
+SET need_to_repeat TO TRUE
+WHILE need_to_repeat IS TRUE
+SET validate_day TO validate_date_input("day",1,31,"DD")
+SET validate_month TO validate_date_input("month",1,12,"MM")
+SET validate_year TO validate_date_input("year",2000,2024,"YYYY")
+SET string_file_name TO CONCAT(“traffic_data”, validate_day, validate_month, validate_year, “.csv”)
+CALL process_csv_data(string_file_name)
+CALL display_outcomes(string_file_name)
+CALL save_results_to_file(string_file_name)
+Try: 
+SET displaying_date TO CONCAT (validate_day, “/”, validate_month, “/”, validate_year)
+SET self.current_data TO self.load_csv_file(string_file_name)
+SET histo TO HistogramApp(self.current_data, displaying_date)
+CALL histo.run()
+			EXCEPT:
+				SET need_to_repeat TO self.handle_user_interaction()
+				CONTINUE
+			ENDTRY
+			SET need_to_repeat TO self.handle_user_interaction()
+		ENDWHILE
+	ENDMETHOD
+
+
+// Main Program
+If this script is executed directly: 
+SET main_program TO new MultiCSVProcessor 
+Call main_program .process_files() 
+
+END
